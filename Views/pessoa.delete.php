@@ -9,8 +9,9 @@ use Db\Persiste;
 
 if ( isset($_GET['id']) )
 {
+	$persiste = new Persiste();
 	// id foi colocado 0 pois será gerado automaticamente pelo banco de dados
-	Persiste::DeletePessoa($_GET['id']);
+	$persiste->DeletePessoa($_GET['id']);
 }
 
 ?>

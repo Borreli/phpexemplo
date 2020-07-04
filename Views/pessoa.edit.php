@@ -8,7 +8,8 @@ spl_autoload_register(function ($class_name) {
 use Models\Pessoa;
 use Db\Persiste;
 
-$p = Persiste::GetPessoaById($_GET['id']);
+$persiste = new Persiste();
+$p = $persiste->GetPessoaById($_GET['id']);
 
 ?>
 

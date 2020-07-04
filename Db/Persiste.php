@@ -15,21 +15,66 @@ include('ConfiguracaoConexao.php');
 // obs.: Implementa métodos para inserção, deleção, alteração e recuperação de objetos persistidos em banco de dados
 class Persiste{
 
-	// Método para adicionar um objeto da classe Pessoa ao banco de dados
-	// Nome da tabela será "pessoas": create table pessoas (id int not null primary key AUTO_INCREMENT, nome varchar (100) not null, telefone varchar(20) not null)
-	public static function AddPessoa(Pessoa $obj){
-		
+	protected $pdo;
+
+	function __construct() {
+		$this->InicializarBancoDados();
 		try {
+
 			// Cria objeto PDO
-			$pdo = new PDO(hostDb,usuario,senha);
+			$this->pdo = new PDO(HOST_DB,USER,PASSWORD);
 
 			// Configura o comportamento no caso de erros: levanta exceção.
-			$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 			// Não emula comandos preparados, usa nativo do driver do banco
-			$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE);
+			$this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE);
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			echo $pex->getMessage();
+			echo $pex->getCode();
+		}
+	}
 
-			$stmt = $pdo->prepare('insert into pessoas (nome,telefone) values (:nome,:telefone)');
+	function __destruct() {
+		$this->pdo = null;
+	}
+
+	public function InicializarBancoDados() {
+		try {
+			$local_pdo = new PDO('mysql:host='.HOST, USER, PASSWORD);
+			$local_pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			// $local_pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE);
+
+			// Cria a database lp4
+			$local_pdo->exec("CREATE DATABASE IF NOT EXISTS ".DB." CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;");
+
+			$local_pdo = new PDO(HOST_DB, USER, PASSWORD);
+			$local_pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			// $local_pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE);			
+
+			// Cria a tabela pessoas
+			$local_pdo->exec("CREATE TABLE IF NOT EXISTS pessoas 
+								   (id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+									nome VARCHAR(150) NOT NULL,
+									telefone VARCHAR(25),
+									CONSTRAINT pk_pessoas
+										PRIMARY KEY (id));");
+			
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			echo $pex->getMessage();
+			echo $pex->getCode();
+		}
+		
+	}
+
+	// Método para adicionar um objeto da classe Pessoa ao banco de dados
+	// Nome da tabela será "pessoas": create table pessoas (id int not null primary key AUTO_INCREMENT, nome varchar (100) not null, telefone varchar(20) not null)
+	public function AddPessoa(Pessoa $obj){
+		
+		try {
+			$stmt = $this->pdo->prepare('insert into pessoas (nome,telefone) values (:nome,:telefone)');
 			$stmt->bindParam(':nome',$pnome);
 			$stmt->bindParam(':telefone',$ptelefone);
 
@@ -46,31 +91,19 @@ class Persiste{
 			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
 			$retorno = false;
 
-		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY	
-		} finally {
-			$pdo=null;
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
 		}
-
 		return $retorno;
 	}
 
-	public static function GetAllPessoa() //($inicioPagina,$tamanhoPagina)
+	public function GetAllPessoa() //($inicioPagina,$tamanhoPagina)
 	{
 		try {
-			// Cria objeto PDO
-			$pdo = new PDO(hostDb,usuario,senha);
-
-			// Configura o comportamento no caso de erros: levanta exceção.
-			$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-			// Não emula comandos preparados, usa nativo do driver do banco
-			$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE);
-
-			//$stmt = $pdo->prepare('select id, nome, telefone from pessoas order by id limit :inicioPagina, :tamanhoPagina');
+			//$stmt = $this->pdo->prepare('select id, nome, telefone from pessoas order by id limit :inicioPagina, :tamanhoPagina');
 			// $stmt->bindParam(':inicioPagina',$inicioPagina);
 			// $stmt->bindParam(':tamanhoPagina',$tamanhoPagina);
 
-			$stmt = $pdo->prepare('select id, nome, telefone from pessoas order by id');
+			$stmt = $this->pdo->prepare('select id, nome, telefone from pessoas order by id');
 
 			// Executa comando SQL
 			$stmt->execute();
@@ -92,28 +125,16 @@ class Persiste{
 			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
 			$retorno = null;
 
-		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY	
-		} finally {
-			$pdo=null;
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
 		}
-
 		return $retorno;
 	}
 
-	public static function GetPessoaById($id)
+	public function GetPessoaById($id)
 	{
 		try {
-			// Cria objeto PDO
-			$pdo = new PDO(hostDb,usuario,senha);
-
-			// Configura o comportamento no caso de erros: levanta exceção.
-			$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-			// Não emula comandos preparados, usa nativo do driver do banco
-			$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE);
-
 			// Cria objeto comando preparado
-			$stmt = $pdo->prepare('select id, nome, telefone from pessoas where id=:i');
+			$stmt = $this->pdo->prepare('select id, nome, telefone from pessoas where id=:i');
 
 			// liga parametros do SQL ao parâmetro $id do método GetPessoaById
 			$stmt->bindParam(':i',$id);
@@ -135,29 +156,17 @@ class Persiste{
 			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
 			$retorno = null;
 
-		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY	
-		} finally {
-			$pdo=null;
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
 		}
-
 		return $retorno;
 	}
 
-	public static function UpdatePessoa(Pessoa $obj)
+	public function UpdatePessoa(Pessoa $obj)
 	{
 		// sql: update pessoas set nome=:nnome, telefone=:ntel where id=:id
 
 		try {
-			// Cria objeto PDO
-			$pdo = new PDO(hostDb,usuario,senha);
-
-			// Configura o comportamento no caso de erros: levanta exceção.
-			$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-			// Não emula comandos preparados, usa nativo do driver do banco
-			$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE);
-
-			$stmt = $pdo->prepare('update pessoas set nome=:nnome, telefone=:ntel where id=:id');
+			$stmt = $this->pdo->prepare('update pessoas set nome=:nnome, telefone=:ntel where id=:id');
 
 			$stmt->bindParam(':id',$pid);
 			$stmt->bindParam(':nnome',$pnome);
@@ -178,28 +187,17 @@ class Persiste{
 			$retorno = false;
 
 		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY	
-		} finally {
-			$pdo=null;
 		}
 
 		return $retorno;
 
 	}
 
-	public static function DeletePessoa($id)
+	public function DeletePessoa($id)
 	{
 		// sql: delete from pessoa where id=:id
 		try {
-			// Cria objeto PDO
-			$pdo = new PDO(hostDb,usuario,senha);
-
-			// Configura o comportamento no caso de erros: levanta exceção.
-			$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-			// Não emula comandos preparados, usa nativo do driver do banco
-			$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE);
-
-			$stmt = $pdo->prepare('delete from pessoas where id=:id');
+			$stmt = $this->pdo->prepare('delete from pessoas where id=:id');
 
 			$stmt->bindParam(':id',$id);
 
@@ -214,8 +212,6 @@ class Persiste{
 			$retorno = false;
 
 		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY	
-		} finally {
-			$pdo=null;
 		}
 
 		return $retorno;
