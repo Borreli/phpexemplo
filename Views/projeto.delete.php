@@ -1,18 +1,17 @@
 <?php
-header('location: pessoa.index.php');
+header('location: pessoa.index.php'); // redireciona para o local indicado
+
 spl_autoload_register(function ($class_name) {
     include '..\\'.$class_name . '.php';
 });
 
-use Models\Pessoa;
 use Db\Persiste;
 
-if ( isset($_POST['nome']) && isset($_POST['telefone']))
+if ( isset($_GET['id']) )
 {
 	$persiste = new Persiste();
 	// id foi colocado 0 pois será gerado automaticamente pelo banco de dados
-	$novaPessoa = new Pessoa(0,$_POST['nome'],$_POST['telefone']);
-	$persiste->AddPessoa($novaPessoa);
+	$persiste->DeletePessoa($_GET['id']);
 }
 
 ?>

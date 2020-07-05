@@ -6,6 +6,7 @@ namespace Db; // agrupamento de classes (caminho)
 use \PDO;
 use \PDOException;
 use \Models\Pessoa;
+use \Models\Projeto;
 // Obs.: PDO implementa interação com Banco de Dados
 
 // Inclui dados para conexão com banco de dados
@@ -13,7 +14,7 @@ include('ConfiguracaoConexao.php');
 
 // Classe (ou Tipo) de Objeto
 // obs.: Implementa métodos para inserção, deleção, alteração e recuperação de objetos persistidos em banco de dados
-class Persiste{
+class Persiste {
 
 	protected $pdo;
 
@@ -59,7 +60,34 @@ class Persiste{
 									nome VARCHAR(150) NOT NULL,
 									telefone VARCHAR(25),
 									CONSTRAINT pk_pessoas
-										PRIMARY KEY (id));");
+										PRIMARY KEY (id),
+									CONSTRAINT uk_nome_pessoa
+										UNIQUE (nome)
+								);");
+
+			// Cria a tabela projetos
+			$local_pdo->exec("CREATE TABLE IF NOT EXISTS projetos 
+								   (id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+									descricao VARCHAR(250) NOT NULL,
+									orcamento DOUBLE(9,2),
+									CONSTRAINT pk_projetos
+										PRIMARY KEY (id)
+							);");
+
+
+			// Cria a tabela pessoa_projeto
+			$local_pdo->exec("CREATE TABLE IF NOT EXISTS pessoa_projeto
+								   (pessoa_id INT UNSIGNED,
+									projeto_id INT UNSIGNED,
+									CONSTRAINT pk_pessoa_projeto
+										PRIMARY KEY (pessoa_id, projeto_id),
+									CONSTRAINT fk_pessoa_projeto_pessoas
+										FOREIGN KEY (pessoa_id)
+											REFERENCES pessoas(id),
+									CONSTRAINT fk_pessoa_projeto_projetos
+										FOREIGN KEY (projeto_id)
+											REFERENCES projetos(id)
+							);");
 			
 		} catch (PDOException $pex) {
 			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
@@ -161,6 +189,81 @@ class Persiste{
 		return $retorno;
 	}
 
+
+	public function GetPessoaByNome($nome)
+	{
+		try {
+			// Cria objeto comando preparado
+			$stmt = $this->pdo->prepare('select id, nome, telefone from pessoas where nome=:nome');
+
+			// liga parametros do SQL ao parâmetro $id do método GetPessoaById
+			$stmt->bindParam(':nome',$nome);
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			// Resultado na forma de vetor associativo
+			$stmt->setFetchMode(PDO::FETCH_ASSOC);
+
+			// Carrega em $linha dados resultandes do select (vetor associativo com uma célula)
+			$linha = $stmt->fetchAll();
+
+			if(isset($linha[0])){
+				// Criar vetor de objetos Pessoa a ser retornado
+				$retorno = new Pessoa($linha[0]['id'],$linha[0]['nome'],$linha[0]['telefone']); 
+			} else {
+				$retorno = null;
+			}
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = null;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
+		}
+		return $retorno;
+	}
+
+
+	public function GetPessoaByProjeto($projeto_id)
+	{
+		try {
+			// Cria objeto comando preparado
+			$stmt = $this->pdo->prepare('select pe.nome
+										 from pessoas as pe
+										 inner join pessoa_projeto as pp
+										 on pp.pessoa_id = pe.id
+										 where pp.projeto_id=:projeto_id');
+
+			// liga parametros do SQL ao parâmetro $id do método GetProjetoById
+			$stmt->bindParam(':projeto_id',$projeto_id);
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			// Resultado na forma de vetor associativo
+			$stmt->setFetchMode(PDO::FETCH_ASSOC);
+
+			// Carrega em $linha dados resultandes do select (vetor associativo com uma célula)
+			$linhas = $stmt->fetchAll();
+
+			$retorno = []; // vetor vazio
+			foreach($linhas as $i=>$linha){
+				array_push($retorno, $linha['nome']);
+			}
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = null;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
+		}
+		return $retorno;
+	}
+
+
 	public function UpdatePessoa(Pessoa $obj)
 	{
 		// sql: update pessoas set nome=:nnome, telefone=:ntel where id=:id
@@ -216,6 +319,185 @@ class Persiste{
 
 		return $retorno;
 	}
+
+	public function GetProjetoLastId(){
+		return $this->pdo->lastInsertId("projetos");
+	}
+
+	// Método para adicionar um objeto da classe Projeto ao banco de dados
+	public function AddProjeto(Projeto $obj){
+		
+		try {
+			$stmt = $this->pdo->prepare('insert into projetos (descricao,orcamento) values (:descricao,:orcamento)');
+			$stmt->bindParam(':descricao',$descricao);
+			$stmt->bindParam(':orcamento',$orcamento);
+
+			$descricao = $obj->getdescricao;
+			$orcamento = $obj->getorcamento;
+			// Executa comando SQL
+			$stmt->execute();
+
+			$retorno = $this->GetProjetoLastId();
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = false;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
+		}
+		return $retorno;
+	}
+
+	public function GetAllProjeto() //($inicioPagina,$tamanhoPagina)
+	{
+		try {
+			//$stmt = $this->pdo->prepare('select id, descricao, orcamento from projetos order by id limit :inicioPagina, :tamanhoPagina');
+			// $stmt->bindParam(':inicioPagina',$inicioPagina);
+			// $stmt->bindParam(':tamanhoPagina',$tamanhoPagina);
+
+			$stmt = $this->pdo->prepare('select id, descricao, orcamento from projetos order by id');
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			// Resultado na forma de vetor associativo
+			$stmt->setFetchMode(PDO::FETCH_ASSOC);
+
+			// Carrega em $tabela dados resultandes do select (vetro associativo)
+			$tabela = $stmt->fetchAll();
+
+			// Criar vetor de objetos Projeto a ser retornado
+			$retorno = []; // vetor vazio
+			foreach($tabela as $i=>$v){
+				array_push($retorno,new Projeto($v['id'],
+												$v['descricao'],
+												$v['orcamento'], 
+												$this->GetPessoaByProjeto($v['id'])));
+			}
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = null;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
+		}
+		return $retorno;
+	}
+
+	public function GetProjetoById($id)
+	{
+		try {
+			// Cria objeto comando preparado
+			$stmt = $this->pdo->prepare('select id, descricao, orcamento from projetos where id=:i');
+
+			// liga parametros do SQL ao parâmetro $id do método GetProjetoById
+			$stmt->bindParam(':i',$id);
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			// Resultado na forma de vetor associativo
+			$stmt->setFetchMode(PDO::FETCH_ASSOC);
+
+			// Carrega em $linha dados resultandes do select (vetor associativo com uma célula)
+			$linha = $stmt->fetchAll();
+
+			// Criar vetor de objetos Projeto a ser retornado
+			$retorno = new Projeto($linha[0]['id'],$linha[0]['descricao'],$linha[0]['orcamento']); 
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = null;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
+		}
+		return $retorno;
+	}
+
+	public function UpdateProjeto(Projeto $obj)
+	{
+		// sql: update projetos set descricao=:descricao, orcamento=:orcamento where id=:id
+
+		try {
+			$stmt = $this->pdo->prepare('update projetos set descricao=:descricao, orcamento=:orcamento where id=:id');
+
+			$stmt->bindParam(':id',$pid);
+			$stmt->bindParam(':descricao',$descricao);
+			$stmt->bindParam(':orcamento',$orcamento);
+
+			$pid = $obj->getid;
+			$descricao = $obj->getdescricao;
+			$orcamento = $obj->getorcamento;
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			$retorno = true;
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = false;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY	
+		}
+
+		return $retorno;
+
+	}
+
+	public function DeleteProjeto($id)
+	{
+		// sql: delete from projeto where id=:id
+		try {
+			$stmt = $this->pdo->prepare('delete from projetos where id=:id');
+
+			$stmt->bindParam(':id',$id);
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			$retorno = true;
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = false;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY	
+		}
+
+		return $retorno;
+	}
+
+
+	// Método para adicionar um objeto da classe Projeto ao banco de dados
+	public function AddPessoaProjeto($pessoa_id, $projeto_id){
+		
+		try {
+			$stmt = $this->pdo->prepare('insert into pessoa_projeto (pessoa_id,projeto_id) values (:pessoa_id,:projeto_id)');
+			$stmt->bindParam(':pessoa_id',$pessoa_id);
+			$stmt->bindParam(':projeto_id',$projeto_id);
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			$retorno = true;
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = false;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
+		}
+		return $retorno;
+	}
+
+
 
 }
 ?>
