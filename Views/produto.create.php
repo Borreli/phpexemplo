@@ -15,7 +15,7 @@
 				</div>
 				<div class="form-group">
 					<label for="valor_produto">Valor</label>
-					<input type="text" name="valor_produto" class="form-control" maxlength="20" required/>
+					<input type="number" name="valor_produto" class="form-control" maxlength="20" required/>
 				</div>
 				<div class="form-group">
 					<input type="submit" value="Salvar" class="btn btn-primary btn-small"/>

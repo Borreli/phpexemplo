@@ -515,13 +515,13 @@ class Persiste {
 		
 		try {
 			$stmt = $this->pdo->prepare('insert into produto (nome_produto,data_vencimento_produto, valor_produto) values (:nome_produto,:data_vencimento_produto, :valor_produto)');
-			$stmt->bindParam(':nome_produto',$pnome_produto);
+			$stmt->bindParam(':nome_produto',$nome_produto);
 			$stmt->bindParam(':data_vencimento_produto',$data_vencimento_produto);
 			$stmt->bindParam(':valor_produto',$valor_produto);
 
-			$pnome_produto = $obj->getnome_produto;
-			$pdata_vencimento_produto = $obj->getdata_vencimento_produto;
-			$pvalor_produto = $obj->getvalor_produto;
+			$nome_produto = $obj->getnome_produto;
+			$data_vencimento_produto = $obj->getdata_vencimento_produto;
+			$valor_produto = $obj->getvalor_produto;
 			// Executa comando SQL
 			$stmt->execute();
 
@@ -530,6 +530,8 @@ class Persiste {
 		// Desvia para catch no caso de erros.	
 		} catch (PDOException $pex) {
 			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			echo($pex->getMessage());
+			echo($pex->getCode());
 			$retorno = false;
 
 		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY

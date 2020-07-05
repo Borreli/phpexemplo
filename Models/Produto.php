@@ -3,7 +3,7 @@ namespace Models; // agrupamento de classes (caminho)
 
 // Classe (ou Tipo) de Objeto
 // obs.: Pessoa implementa a interface Idados, significando que implementa todos os métodos definidos pela interface.
-	class Pessoa implements Idados{
+	class Produto implements Idados{
 	// Propriedades
 	protected $id;
 	protected $nome_produto;
