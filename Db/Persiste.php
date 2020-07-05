@@ -7,6 +7,7 @@ use \PDO;
 use \PDOException;
 use \Models\Pessoa;
 use \Models\Projeto;
+use \Models\Produto;
 // Obs.: PDO implementa interação com Banco de Dados
 
 // Inclui dados para conexão com banco de dados
@@ -88,6 +89,17 @@ class Persiste {
 										FOREIGN KEY (projeto_id)
 											REFERENCES projetos(id)
 							);");
+			// Cria a tabela produto
+			$local_pdo->exec("CREATE TABLE IF NOT EXISTS produto 
+								   (id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+									nome_produto VARCHAR(100) NOT NULL,
+									data_vencimento_produto DATE,
+									valor_produto DOUBLE(9,2),
+									CONSTRAINT pk_produto
+									 	PRIMARY KEY (id),
+									CONSTRAINT uk_nome_produto
+										UNIQUE(nome_produto)
+								);");
 			
 		} catch (PDOException $pex) {
 			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
@@ -497,7 +509,153 @@ class Persiste {
 		return $retorno;
 	}
 
+	// Método para adicionar um objeto da classe Produto ao banco de dados
+	// Nome da tabela será "produto": create table produto (id int not null primary key AUTO_INCREMENT, nome_produto varchar (100) not null, data_vencimento_produto DATE, valor_produto DOUBLE
+	public function AddProduto(Produto $obj){
+		
+		try {
+			$stmt = $this->pdo->prepare('insert into produto (nome_produto,data_vencimento_produto, valor_produto) values (:nome_produto,:data_vencimento_produto, :valor_produto)');
+			$stmt->bindParam(':nome_produto',$pnome_produto);
+			$stmt->bindParam(':data_vencimento_produto',$data_vencimento_produto);
+			$stmt->bindParam(':valor_produto',$valor_produto);
 
+			$pnome_produto = $obj->getnome_produto;
+			$pdata_vencimento_produto = $obj->getdata_vencimento_produto;
+			$pvalor_produto = $obj->getvalor_produto;
+			// Executa comando SQL
+			$stmt->execute();
 
+			$retorno = true;
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = false;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
+		}
+		return $retorno;
+	}
+public function GetAllProduto() //($inicioPagina,$tamanhoPagina)
+	{
+		try {
+			//$stmt = $this->pdo->prepare('select id, nome_produto, data_vencimento_produto, valor_produto from produto order by id limit :inicioPagina, :tamanhoPagina');
+			// $stmt->bindParam(':inicioPagina',$inicioPagina);
+			// $stmt->bindParam(':tamanhoPagina',$tamanhoPagina);
+
+			$stmt = $this->pdo->prepare('select id, nome_produto, data_vencimento_produto, valor_produto from produto order by id');
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			// Resultado na forma de vetor associativo
+			$stmt->setFetchMode(PDO::FETCH_ASSOC);
+
+			// Carrega em $tabela dados resultandes do select (vetro associativo)
+			$tabela = $stmt->fetchAll();
+
+			// Criar vetor de objetos Produto a ser retornado
+			$retorno = []; // vetor vazio
+			foreach($tabela as $i=>$v){
+				array_push($retorno,new Produto($v['id'],$v['nome_produto'],$v['data_vencimento_produto'],$v['valor_produto']));
+			}
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = null;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
+		}
+		return $retorno;
+	}
+	public function GetProdutoById($id)
+	{
+		try {
+			// Cria objeto comando preparado
+			$stmt = $this->pdo->prepare('select id, nome_produto, data_vencimento_produto, valor_produto from produto where id=:i');
+
+			// liga parametros do SQL ao parâmetro $id do método GetProdutoById
+			$stmt->bindParam(':i',$id);
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			// Resultado na forma de vetor associativo
+			$stmt->setFetchMode(PDO::FETCH_ASSOC);
+
+			// Carrega em $linha dados resultandes do select (vetor associativo com uma célula)
+			$linha = $stmt->fetchAll();
+
+			// Criar vetor de objetos Pessoa a ser retornado
+			$retorno = new Produto($linha[0]['id'],$linha[0]['nome_produto'],$linha[0]['data_vencimento_produto'],$linha[0]['valor_produto']); 
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = null;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY
+		}
+		return $retorno;
+	}
+
+		public function UpdateProduto(Produto $obj)
+	{
+		
+
+		try {
+			$stmt = $this->pdo->prepare('update produto set nome_produto=:nome_produto, data_vencimento_produto=:data_vencimento_produto, valor_produto=:valor_produto where id=:id');
+
+			$stmt->bindParam(':id',$pid);
+			$stmt->bindParam(':nome_produto',$nome_produto);
+			$stmt->bindParam(':data_vencimento_produto',$data_vencimento_produto);
+			$stmt->bindParam(':valor_produto',$valor_produto);
+
+			$pid = $obj->getid;
+			$nome_produto = $obj->getnome_produto;
+			$data_vencimento_produto = $obj->getdata_vencimento_produto;
+			$valor_produto = $obj->getvalor_produto;
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			$retorno = true;
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = false;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY	
+		}
+
+		return $retorno;
+
+	}
+
+	public function DeleteProduto($id)
+	{
+		// sql: delete from produto where id=:id
+		try {
+			$stmt = $this->pdo->prepare('delete from produto where id=:id');
+
+			$stmt->bindParam(':id',$id);
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			$retorno = true;
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = false;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY	
+		}
+
+		return $retorno;
+	}
 }
 ?>

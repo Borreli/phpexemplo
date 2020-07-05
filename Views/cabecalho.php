@@ -41,6 +41,9 @@
       <li class="nav-item">
         <a class="nav-link" href="/phpexemplo/Views/projeto.index.php">Projeto</a>
       </li>
+       <li class="nav-item">
+        <a class="nav-link" href="/phpexemplo/Views/produto.index.php">Produto</a>
+      </li>
     </ul>
   </div>  
 </nav>
