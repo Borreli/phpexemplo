@@ -417,7 +417,8 @@ class Persiste {
 			$linha = $stmt->fetchAll();
 
 			// Criar vetor de objetos Projeto a ser retornado
-			$retorno = new Projeto($linha[0]['id'],$linha[0]['descricao'],$linha[0]['orcamento']); 
+			$retorno = new Projeto($linha[0]['id'],$linha[0]['descricao'],$linha[0]['orcamento'],
+				$this->GetPessoaByProjeto($linha[0]['id']));
 
 		// Desvia para catch no caso de erros.	
 		} catch (PDOException $pex) {
@@ -509,6 +510,55 @@ class Persiste {
 		return $retorno;
 	}
 
+	public function DeletePessoaProjetoByProjeto($projeto_id)
+	{
+		// sql: delete from produto where id=:id
+		try {
+			$stmt = $this->pdo->prepare('delete from pessoa_projeto where projeto_id=:projeto_id');
+
+			$stmt->bindParam(':projeto_id',$projeto_id);
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			$retorno = true;
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = false;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY	
+		}
+
+		return $retorno;
+	}
+
+
+	public function DeletePessoaProjetoByPessoa($pessoa_id)
+	{
+		// sql: delete from produto where id=:id
+		try {
+			$stmt = $this->pdo->prepare('delete from pessoa_projeto where pessoa_id=:pessoa_id');
+
+			$stmt->bindParam(':pessoa_id',$pessoa_id);
+
+			// Executa comando SQL
+			$stmt->execute();
+
+			$retorno = true;
+
+		// Desvia para catch no caso de erros.	
+		} catch (PDOException $pex) {
+			//poder ser usado "$pex->getMessage();" ou "$pex->getCode();" para se obter detalhes sobre o erro.
+			$retorno = false;
+
+		// Sempre executa o bloco finally, tendo ocorrido ou não erros no bloco TRY	
+		}
+
+		return $retorno;
+	}
+
 	// Método para adicionar um objeto da classe Produto ao banco de dados
 	// Nome da tabela será "produto": create table produto (id int not null primary key AUTO_INCREMENT, nome_produto varchar (100) not null, data_vencimento_produto DATE, valor_produto DOUBLE
 	public function AddProduto(Produto $obj){
@@ -538,7 +588,7 @@ class Persiste {
 		}
 		return $retorno;
 	}
-public function GetAllProduto() //($inicioPagina,$tamanhoPagina)
+	public function GetAllProduto() //($inicioPagina,$tamanhoPagina)
 	{
 		try {
 			//$stmt = $this->pdo->prepare('select id, nome_produto, data_vencimento_produto, valor_produto from produto order by id limit :inicioPagina, :tamanhoPagina');

@@ -25,7 +25,7 @@ spl_autoload_register(function ($class_name) {
 				<div class=" form-group">
 					<label for="colaboradores[]">Colaboradores</label>
 					<div class="input-group control-group after-add-more">
-						<input type="text" name="colaboradores[]" class="form-control" list="colab"/>
+						<input type="text" name="colaboradores[]" class="form-control" list="colab" autocomplete="off"/>
 						<div class="input-group-btn"> 
 				            <button class="btn btn-success add-more" type="button"><i class="glyphicon glyphicon-plus"></i> Add</button>
 				          </div>
@@ -35,7 +35,7 @@ spl_autoload_register(function ($class_name) {
 
 				<div class="copy invisible">
 					<div class="control-group input-group" style="margin-top:10px">
-			            <input type="text" name="colaboradores[]" class="form-control" list="colab">
+			            <input type="text" name="colaboradores[]" class="form-control" list="colab" autocomplete="off">
 			            <div class="input-group-btn"> 
 			              <button class="btn btn-danger remove" type="button"><i class="glyphicon glyphicon-remove"></i> Remove</button>
 			            </div>

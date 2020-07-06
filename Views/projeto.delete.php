@@ -1,5 +1,5 @@
 <?php
-header('location: pessoa.index.php'); // redireciona para o local indicado
+header('location: projeto.index.php'); // redireciona para o local indicado
 
 spl_autoload_register(function ($class_name) {
     include '..\\'.$class_name . '.php';
@@ -11,7 +11,8 @@ if ( isset($_GET['id']) )
 {
 	$persiste = new Persiste();
 	// id foi colocado 0 pois será gerado automaticamente pelo banco de dados
-	$persiste->DeletePessoa($_GET['id']);
+	$persiste->DeletePessoaProjetoByProjeto($_GET['id']);
+	$persiste->DeleteProjeto($_GET['id']);
 }
 
 ?>
