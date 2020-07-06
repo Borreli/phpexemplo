@@ -11,7 +11,7 @@ if ( isset($_POST['nome_produto']) && isset($_POST['data_vencimento_produto']) &
 {
 	$persiste = new Persiste();
 	// id foi colocado 0 pois será gerado automaticamente pelo banco de dados
-	$novoProduto = new Produto(0,$_POST['nome_produto'],$_POST['data_vencimento_produto'], $_POST['valor_produto']);
+	$novoProduto = new Produto(0,$_POST['nome_produto'],$_POST['data_vencimento_produto'], (float)$_POST['valor_produto']);
 	$persiste->AddProduto($novoProduto);
 }
 

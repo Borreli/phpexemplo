@@ -12,7 +12,7 @@ class Projeto implements Idados{
 	// obs.: propriedades protected são acessíveis por subclasses (extend)
 
 	// Método construtor.
-	public function __construct($id,$descricao,$orcamento,$colaboradores){
+	public function __construct($id,$descricao,$orcamento,$colaboradores=null){
 		$this->id=$id;
 		$this->descricao=$descricao;
 		$this->orcamento=$orcamento;
