@@ -21,7 +21,7 @@ $p = $persiste->GetProdutoById($_GET['id']);
 				<input type="hidden" name="id" value="<?= $p->getid ?>">
 				<div class="form-group">
 					<label for="nome_produto">Nome</label>
-					<input type="text" value="<?= $p->getnome_produto ?>" name="nome" class="form-control" maxlength="100" required />
+					<input type="text" value="<?= $p->getnome_produto ?>" name="nome_produto" class="form-control" maxlength="100" required />
 				</div>
 				<div class="form-group">
 					<label for="data_vencimento_produto">Data de Vencimento</label>
